@@ -1,0 +1,25 @@
+name: SmartBite Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Docker Build
+        run: docker build -t smartbite-api .
+
+      - name: Deployment Ready
+        run: echo "Production deployment ready"

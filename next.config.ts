@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  reactStrictMode: true,
+
+  // FIX: correct modern Next.js config
+  serverExternalPackages: ["@supabase/supabase-js"],
+
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default nextConfig;

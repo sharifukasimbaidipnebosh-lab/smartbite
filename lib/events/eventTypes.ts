@@ -1,0 +1,6 @@
+export type EventType =
+  | "DRIVER_LOCATION_UPDATE"
+  | "ORDER_CREATED"
+  | "ORDER_ASSIGNED"
+  | "ORDER_DELIVERED"
+  | "DRIVER_OFFLINE";

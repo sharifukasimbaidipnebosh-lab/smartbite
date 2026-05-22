@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: smartbite-api
+
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: smartbite
+
+  template:
+    metadata:
+      labels:
+        app: smartbite
+
+    spec:
+      containers:
+        - name: api
+          image: smartbite/api:latest
+
+          ports:
+            - containerPort: 3000
