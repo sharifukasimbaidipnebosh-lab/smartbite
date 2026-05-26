@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 
 type Driver = {
@@ -11,10 +10,32 @@ type Driver = {
   longitude: number;
 };
 
+// 🚨 IMPORTANT: disable SSR for Leaflet map
+const MapContainer = dynamic(
+  () => import("react-leaflet").then((m) => m.MapContainer),
+  { ssr: false }
+);
+
+const TileLayer = dynamic(
+  () => import("react-leaflet").then((m) => m.TileLayer),
+  { ssr: false }
+);
+
+const Marker = dynamic(
+  () => import("react-leaflet").then((m) => m.Marker),
+  { ssr: false }
+);
+
+const Popup = dynamic(
+  () => import("react-leaflet").then((m) => m.Popup),
+  { ssr: false }
+);
+
+import "leaflet/dist/leaflet.css";
+
 export default function TrackingPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
 
-  // Load initial data
   const fetchDrivers = async () => {
     const { data } = await supabase
       .from("driver_locations")
@@ -26,7 +47,6 @@ export default function TrackingPage() {
   useEffect(() => {
     fetchDrivers();
 
-    // 🚀 REAL-TIME WEBSOCKET SUBSCRIPTION
     const channel = supabase
       .channel("driver-live")
       .on(
@@ -36,10 +56,7 @@ export default function TrackingPage() {
           schema: "public",
           table: "driver_locations",
         },
-        (payload: any) => {
-          console.log("Realtime update:", payload);
-
-          // refresh instantly
+        () => {
           fetchDrivers();
         }
       )
@@ -53,7 +70,7 @@ export default function TrackingPage() {
   return (
     <div className="h-screen w-full">
       <MapContainer
-        center={[25.2048, 55.2708]} // Dubai
+        center={[25.2048, 55.2708]}
         zoom={12}
         className="h-full w-full"
       >

@@ -1,9 +1,12 @@
 import { Server } from "socket.io";
-import { subscriber } from "@/lib/redis/broker";
+import { dispatchOrder } from "@/lib/dispatch/dispatchController";
+import { calculateSurge } from "@/lib/pricing/surgePricing";
 
 export const runtime = "nodejs";
 
 let io: Server | null = null;
+let drivers: any[] = [];
+let activeOrders: any[] = [];
 
 export async function GET() {
   if (!io) {
@@ -13,38 +16,67 @@ export async function GET() {
     });
 
     io.on("connection", (socket) => {
-      console.log("Gateway connected:", socket.id);
+      console.log("connected:", socket.id);
 
-      // 📡 DRIVER GPS → BROADCAST ONLY
-      socket.on("driver-location", (data) => {
-        io?.emit("driver-live", data);
+      // DRIVER REGISTER
+      socket.on("register-driver", (data) => {
+        drivers.push({
+          id: socket.id,
+          lat: data.lat,
+          lng: data.lng,
+          active: true,
+          reliability: 1,
+        });
       });
 
-      // 📦 ORDER EVENTS
-      socket.on("join-order", (orderId) => {
-        socket.join(orderId);
+      // DRIVER LOCATION UPDATE
+      socket.on("driver-location", (data) => {
+        drivers = drivers.map((d) =>
+          d.id === socket.id
+            ? { ...d, lat: data.lat, lng: data.lng }
+            : d
+        );
+
+        io?.emit("driver-live", {
+          driverId: socket.id,
+          ...data,
+        });
+      });
+
+      // ORDER CREATION (AI DISPATCH)
+      socket.on("create-order", async (order) => {
+        activeOrders.push(order);
+
+        const surge = calculateSurge(
+          drivers.length,
+          activeOrders.length
+        );
+
+        const result = await dispatchOrder(io, drivers, order);
+
+        // 🚨 SAFE CHECK (FIX)
+        if (!result.success || !result.driver) {
+          socket.emit("order-failed", {
+            reason: "No drivers available",
+          });
+          return;
+        }
+
+        io?.to(result.driver.id).emit("assigned-order", {
+          order,
+          eta: result.eta,
+          surge,
+        });
+      });
+
+      // DRIVER DISCONNECT
+      socket.on("disconnect", () => {
+        drivers = drivers.filter(
+          (d) => d.id !== socket.id
+        );
       });
     });
-
-    // 📡 REDIS → SOCKET BRIDGE
-    subscriber.subscribe("ORDER_ASSIGNED");
-
-    subscriber.on(
-      "message",
-      (channel, message) => {
-        const event = JSON.parse(message);
-
-        if (channel === "ORDER_ASSIGNED") {
-          io?.to(event.driverId).emit(
-            "assigned-order",
-            event
-          );
-        }
-      }
-    );
   }
 
-  return new Response(
-    "ENTERPRISE SOCKET GATEWAY ACTIVE"
-  );
+  return new Response("PRODUCTION UBER ENGINE ACTIVE");
 }
