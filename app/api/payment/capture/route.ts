@@ -1,13 +1,10 @@
-import Stripe from "stripe";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+import { getStripe } from "@/lib/stripe";
 
 export async function POST(req: Request) {
+  const stripe = getStripe();
+
   const body = await req.json();
 
-  await stripe.paymentIntents.capture(body.paymentIntentId);
-
-  return Response.json({
-    success: true,
-  });
+  // your payment logic here
+  return Response.json({ success: true });
 }
