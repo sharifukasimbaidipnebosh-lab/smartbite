@@ -1,34 +1,31 @@
 import { NextResponse } from "next/server";
-import { getStripe } from "@/lib/stripe";
+import { stripe } from "@/lib/stripe";
 
 export async function POST() {
   try {
-    const stripe = getStripe();
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
+      mode: "payment",
       line_items: [
         {
           price_data: {
             currency: "aed",
             product_data: {
-              name: "SmartBite Delivery Service",
+              name: "SmartBite Order",
             },
             unit_amount: 5000,
           },
           quantity: 1,
         },
       ],
-      mode: "payment",
-      success_url: "http://localhost:3000/success",
-      cancel_url: "http://localhost:3000/cancel",
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cancel`,
     });
 
     return NextResponse.json({ id: session.id });
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
     return NextResponse.json(
-      { error: "Stripe session failed" },
+      { error: error.message },
       { status: 500 }
     );
   }

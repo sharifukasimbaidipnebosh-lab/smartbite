@@ -1,20 +1,23 @@
-import Stripe from "stripe";
+import { NextResponse } from "next/server";
+import { stripe } from "@/lib/stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+export async function POST() {
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: 5000,
+      currency: "aed",
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
 
-export async function POST(req: Request) {
-  const body = await req.json();
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: body.amount,
-    currency: "aed",
-    automatic_payment_methods: {
-      enabled: true,
-    },
-    capture_method: "manual", // Uber-style hold first
-  });
-
-  return Response.json({
-    clientSecret: paymentIntent.client_secret,
-  });
+    return NextResponse.json({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
 }
