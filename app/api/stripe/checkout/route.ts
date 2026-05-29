@@ -11,7 +11,7 @@ export async function POST() {
           price_data: {
             currency: "aed",
             product_data: {
-              name: "SmartBite Order",
+              name: "SmartBite Delivery Service",
             },
             unit_amount: 5000,
           },

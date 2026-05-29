@@ -1,15 +1,5 @@
-export default function AdminPage() {
-  return (
-    <div style={{ padding: 40 }}>
-      <h1>SmartBite Control Center</h1>
+export default async function AdminPage() {
+  const { data } = await supabase.from("orders").select("*");
 
-      <ul>
-        <li>🚗 Active Drivers</li>
-        <li>📦 Active Orders</li>
-        <li>💰 Revenue</li>
-        <li>🔥 Surge Zones</li>
-        <li>📍 Live GPS Tracking</li>
-      </ul>
-    </div>
-  );
+  return <div>Admin</div>;
 }
