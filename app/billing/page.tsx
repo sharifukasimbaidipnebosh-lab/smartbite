@@ -1,37 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-
-export default function Billing() {
-  const [loading, setLoading] = useState(false);
-
-  const subscribe = async () => {
-    setLoading(true);
-
-    const { data: user } = await supabase.auth.getUser();
-
-    const res = await fetch("/api/stripe", {
+export default function BillingPage() {
+  const handleCheckout = async () => {
+    const res = await fetch("/api/stripe/checkout", {
       method: "POST",
-      body: JSON.stringify({
-        restaurantId: "demo",
-      }),
     });
 
     const data = await res.json();
 
-    window.location.href = data.url;
+    if (data.url) {
+      window.location.href = data.url;
+    }
   };
 
   return (
     <div className="p-10">
-      <h1 className="text-2xl font-bold">Upgrade to Pro 💳</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        SmartBite Billing
+      </h1>
 
       <button
-        onClick={subscribe}
-        className="mt-4 bg-purple-600 text-white px-4 py-2 rounded"
+        onClick={handleCheckout}
+        className="bg-black text-white px-6 py-3 rounded"
       >
-        {loading ? "Loading..." : "Start Subscription"}
+        Pay with Stripe
       </button>
     </div>
   );
