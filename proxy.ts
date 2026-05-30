@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const token =
-    request.cookies.get("sb-access-token");
+export function proxy(request: NextRequest) {
+  const token = request.cookies.get("sb-access-token");
 
   if (
     request.nextUrl.pathname.startsWith("/admin") &&
